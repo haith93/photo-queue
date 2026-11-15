@@ -1,0 +1,66 @@
+name: Deploy to GitHub Pages
+
+# Writes js/env.js from repository secrets (Settings → Secrets and variables
+# → Actions): SUPABASE_URL and SUPABASE_ANON_KEY.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tests
+        run: node --test tests/*.test.js 
+
+      - name: Generate js/env.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::Add SUPABASE_URL and SUPABASE_ANON_KEY as repository secrets."
+            exit 1
+          fi
+          cat > js/env.js <<EOF
+          // Generated at deploy time. Do not edit, do not commit.
+          export const ENV = { supabaseUrl: '${SUPABASE_URL}', supabaseAnonKey: '${SUPABASE_ANON_KEY}' };
+          EOF
+
+      - name: Guard against leaking a service-role key
+        run: |
+          if grep -rlE 'service_role|SERVICE_ROLE_KEY *= *[A-Za-z0-9]' --include='*.js' --include='*.html' --include='*.json' . ; then
+            echo "::error::A service-role key appears in the published files."
+            exit 1
+          fi
+
+      - name: Remove files that should not be published
+        run: rm -rf sql tools tests .github js/env.example.js
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

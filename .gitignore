@@ -1,0 +1,7 @@
+js/env.js
+.env
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+node_modules/

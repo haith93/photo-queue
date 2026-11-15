@@ -1,0 +1,100 @@
+/* Same neo-brutalist language as where_is_haitham: ink borders, hard
+   shadows, square corners, yellow for action. Logical properties only,
+   so dir="rtl" mirrors everything. */
+:root {
+  --ink: #0a0a0a;
+  --paper: #fffdf5;
+  --card: #ffffff;
+  --accent: #f5c518;
+  --ok: #157f4a;
+  --danger: #c62828;
+  --muted: #5c5c5c;
+  --bd: 3px solid var(--ink);
+  --sh: 4px 4px 0 var(--ink);
+  font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+[dir="rtl"] { --sh: -4px 4px 0 var(--ink); }
+* { box-sizing: border-box; }
+body { margin: 0; padding-block-end: env(safe-area-inset-bottom); }
+[hidden] { display: none !important; }
+
+button, input { font: inherit; color: inherit; }
+button {
+  min-height: 44px; padding: 0 14px; cursor: pointer;
+  background: var(--card); border: var(--bd); box-shadow: var(--sh);
+}
+button:active { transform: translate(2px, 2px); box-shadow: none; }
+button[aria-pressed="true"], .primary { background: var(--accent); font-weight: 700; }
+.danger { background: var(--danger); color: #fff; }
+button:disabled { opacity: .5; }
+:focus-visible { outline: 3px solid var(--ok); outline-offset: 2px; }
+input { min-height: 44px; padding: 8px 10px; border: var(--bd); background: var(--card); width: 100%; }
+
+/* ---------- header ---------- */
+.bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px 14px; padding-block-start: max(10px, env(safe-area-inset-top));
+  background: var(--accent); border-block-end: var(--bd);
+}
+.bar h1 { margin: 0; font-size: 1.25rem; margin-inline-end: auto; }
+#who { font-weight: 700; }
+
+main { max-width: 760px; margin: 0 auto; padding: 14px; }
+
+/* ---------- entry form ---------- */
+#entry {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  padding: 14px; margin-block-end: 18px; background: var(--card); border: var(--bd); box-shadow: var(--sh);
+}
+#entry.editing { background: #fff6cc; }
+#entry label span, legend { display: block; font-weight: 700; font-size: .9rem; margin-block-end: 4px; }
+.wide { grid-column: 1 / -1; }
+.dates { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.dates input { width: auto; flex: 1 1 150px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.actions .primary { flex: 1; }
+
+/* ---------- view nav ---------- */
+.views { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-block-end: 8px; }
+.toggle { display: inline-flex; }
+.toggle button + button { border-inline-start: 0; }
+#range-label { flex: 1; text-align: center; min-width: 10ch; }
+.arrow { font-size: 1.4rem; line-height: 1; }
+[dir="rtl"] .arrow { transform: scaleX(-1); }
+#msg { min-height: 1.4em; margin: 0 0 8px; font-weight: 600; color: var(--ok); }
+#msg.error { color: var(--danger); }
+
+/* ---------- queue ---------- */
+.day { margin-block-end: 16px; }
+.day h2 { font-size: 1rem; margin: 0 0 6px; padding: 4px 8px; border: var(--bd); background: var(--card); }
+.day.today h2 { background: var(--accent); }
+.day ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.empty { color: var(--muted); margin: 4px 0; }
+
+.req { display: flex; align-items: stretch; gap: 10px; padding: 10px; background: var(--card); border: var(--bd); }
+.req input[type="checkbox"] { width: 28px; min-height: 28px; height: 28px; flex: none; align-self: center; accent-color: var(--ok); }
+.req .body {
+  flex: 1; display: grid; grid-template-columns: auto 1fr; column-gap: 12px; text-align: start;
+  min-height: 0; padding: 0; border: 0; box-shadow: none; background: none;
+}
+.req .body:active { transform: none; }
+.req .time { grid-row: span 3; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 6ch; }
+.req .activity { font-size: 1.05rem; }
+.req .loc { font-weight: 600; }
+.req .notes { color: var(--muted); white-space: pre-wrap; }
+.req.done { opacity: .6; }
+.req.done .activity { text-decoration: line-through; }
+.badge { align-self: center; padding: 2px 8px; border: 2px solid var(--ink); background: var(--ok); color: #fff; font-weight: 700; }
+
+/* ---------- sign-in ---------- */
+dialog { border: var(--bd); box-shadow: var(--sh); padding: 18px; width: min(92vw, 380px); }
+dialog::backdrop { background: rgb(0 0 0 / .4); }
+dialog h2 { margin-block-start: 0; }
+dialog label { display: block; margin-block-end: 12px; }
+dialog label span { display: block; font-weight: 700; margin-block-end: 4px; }
+
+@media (max-width: 420px) {
+  #entry { grid-template-columns: 1fr; }
+}

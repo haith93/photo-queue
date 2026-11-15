@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(../where_is_haitham/**)",
+      "Write(../where_is_haitham/**)"
+    ]
+  }
+}
