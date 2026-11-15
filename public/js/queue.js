@@ -41,18 +41,3 @@ export function groupByDay(rows, from, to) {
   for (const g of days) g.items.sort((a, b) => (sortKey(a) < sortKey(b) ? -1 : sortKey(a) > sortKey(b) ? 1 : 0));
   return days;
 }
-
-/** Most-recent-first distinct values, ignoring case and blanks. */
-export function uniqueRecent(values, max = 50) {
-  const seen = new Set();
-  const out = [];
-  for (const v of values) {
-    const s = (v ?? '').trim();
-    const k = s.toLowerCase();
-    if (!s || seen.has(k)) continue;
-    seen.add(k);
-    out.push(s);
-    if (out.length === max) break;
-  }
-  return out;
-}

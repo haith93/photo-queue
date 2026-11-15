@@ -5,18 +5,18 @@
  */
 
 export const STRINGS = {
-  'app.name':       ['Photo requests', 'طلبات التصوير'],
+  'app.name':       ['Coverage requests', 'طلبات التغطية'],
   'lang.other':     ['العربية', 'English'],
   'signIn':         ['Staff sign-in', 'دخول الموظفين'],
   'signInBtn':      ['Sign in', 'دخول'],
   'signOut':        ['Sign out', 'تسجيل الخروج'],
-  'email':          ['Email', 'البريد الإلكتروني'],
   'password':       ['Password', 'كلمة المرور'],
   'cancel':         ['Cancel', 'إلغاء'],
-  'f.activity':     ['Activity', 'النشاط'],
+  'f.activity':     ['Event', 'المناسبة'],
   'f.date':         ['Date', 'التاريخ'],
   'f.time':         ['Time', 'الوقت'],
-  'f.location':     ['Location', 'المكان'],
+  'f.building':     ['Building', 'المبنى'],
+  'choose':         ['Choose…', 'اختر…'],
   'f.notes':        ['Notes', 'ملاحظات'],
   'today':          ['Today', 'اليوم'],
   'tomorrow':       ['Tomorrow', 'غداً'],
@@ -37,13 +37,10 @@ export const STRINGS = {
   'deleted':        ['Deleted.', 'تم الحذف.'],
   'role.coordinator':  ['Coordinator', 'المنسّق'],
   'role.photographer': ['Photographer', 'المصوّر'],
-  'notConfigured':  ['Not configured yet: copy js/env.example.js to js/env.js.', 'التطبيق غير مُعدّ بعد: انسخ js/env.example.js إلى js/env.js.'],
   'err.offline':    ['You are offline. Reconnect and try again.', 'أنت غير متصل. أعد الاتصال وحاول مجدداً.'],
   'err.network':    ['Could not reach the server. Try again.', 'تعذّر الوصول إلى الخادم. حاول مجدداً.'],
-  'err.login':      ['Wrong email or password.', 'البريد الإلكتروني أو كلمة المرور غير صحيحة.'],
-  'err.session':    ['Your session expired. Sign in again.', 'انتهت الجلسة. سجّل الدخول مجدداً.'],
+  'err.login':      ['Wrong password.', 'كلمة المرور غير صحيحة.'],
   'err.permission': ['You do not have permission to do that.', 'ليست لديك صلاحية للقيام بذلك.'],
-  'err.noRole':     ['This account has no role in the app.', 'هذا الحساب ليس له دور في التطبيق.'],
   'err.generic':    ['Something went wrong. Try again.', 'حدث خطأ ما. حاول مجدداً.']
 };
 

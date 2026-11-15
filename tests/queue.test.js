@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { todayKey, addDays, weekStart, range, groupByDay, uniqueRecent } from '../js/queue.js';
-import { STRINGS } from '../js/i18n.js';
+import { todayKey, addDays, weekStart, range, groupByDay } from '../public/js/queue.js';
+import { STRINGS } from '../public/js/i18n.js';
 
 describe('dates', () => {
   it('todayKey uses the device date', () => {
@@ -40,13 +40,6 @@ describe('groupByDay', () => {
     assert.deepEqual(days[1].items, []);
     assert.deepEqual(days[2].items.map(r => r.id), [5]);
     assert.ok(!days.flatMap(d => d.items).some(r => r.id === 6), 'out-of-range row ignored');
-  });
-});
-
-describe('uniqueRecent', () => {
-  it('dedupes case-insensitively, keeps the first spelling, drops blanks', () => {
-    assert.deepEqual(uniqueRecent(['Hall B', ' hall b', '', null, 'Gym', 'HALL B']), ['Hall B', 'Gym']);
-    assert.equal(uniqueRecent(['a', 'b', 'c'], 2).length, 2);
   });
 });
 

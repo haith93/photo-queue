@@ -1,7 +1,8 @@
-js/env.js
-.env
+.dev.vars
+.wrangler/
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 node_modules/
+wrangler.toml

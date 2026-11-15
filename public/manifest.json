@@ -1,7 +1,7 @@
 {
-  "name": "Photo requests",
-  "short_name": "Photo queue",
-  "description": "The photographer's request queue, by day and week.",
+  "name": "Coverage requests",
+  "short_name": "Coverage",
+  "description": "Photo and video coverage requests, by day and week.",
   "id": "./",
   "start_url": "./index.html",
   "scope": "./",

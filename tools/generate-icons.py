@@ -1,15 +1,15 @@
 """
-Regenerate the PNG icons in assets/icons (standard library only):
+Regenerate the PNG icons in public/assets/icons (standard library only):
 
     python tools/generate-icons.py
 
-Draws the same camera as assets/icons/icon.svg, on a 192-unit grid.
+Draws the same camera as public/assets/icons/icon.svg, on a 192-unit grid.
 """
 import struct
 import zlib
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parent.parent / "assets" / "icons"
+OUT = Path(__file__).resolve().parent.parent / "public" / "assets" / "icons"
 YELLOW, INK = (245, 197, 24), (10, 10, 10)
 
 

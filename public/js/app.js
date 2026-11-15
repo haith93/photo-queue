@@ -1,7 +1,9 @@
-import { sb, configured, withTimeout, errorMessage } from './supabase.js';
+import { api, getKey, setKey } from './api.js';
 import { t, apply, toggleLang, locale } from './i18n.js';
-import { todayKey, addDays, range, groupByDay, uniqueRecent } from './queue.js';
+import { todayKey, addDays, range, groupByDay } from './queue.js';
+import { BUILDINGS } from './buildings.js';
 
+const REFRESH_MS = 30_000;
 const $ = sel => document.querySelector(sel);
 const form = $('#entry');
 const field = name => form.elements[name];
@@ -27,6 +29,15 @@ function say(text, isError = false) {
   msg.classList.toggle('error', isError);
 }
 
+/** Shows the error; a rejected password (changed on the server) signs this phone out. */
+function oops(err) {
+  say(err.message, true);
+  if (err.status === 401 && getKey()) {
+    setKey(null);
+    refreshRole();
+  }
+}
+
 const fmtDay = (key, long) => new Intl.DateTimeFormat(locale(), {
   weekday: long ? 'long' : 'short', day: 'numeric', month: long ? 'long' : 'short', timeZone: 'UTC'
 }).format(new Date(`${key}T00:00:00Z`));
@@ -39,16 +50,17 @@ const fmtTime = s => new Intl.DateTimeFormat(locale(), { hour: 'numeric', minute
 /* ------------------------------------------------------------------ */
 
 async function load() {
-  if (!sb) return;
   const ticket = ++loadTicket;
   const { from, to } = range(state.view, state.anchor);
-  const { data, error } = await sb.from('requests')
-    .select('id, activity, day, start_time, location, notes, done_at, created_at')
-    .gte('day', from).lte('day', to);
-  if (ticket !== loadTicket) return;           // a newer load started meanwhile
-  if (error) return say(errorMessage(error), true);
-  state.rows = data;
-  render();
+  try {
+    const rows = await api(`requests?from=${from}&to=${to}`);
+    if (ticket !== loadTicket) return;          // a newer load started meanwhile
+    state.rows = rows;
+    if ($('#msg').classList.contains('error')) say('');
+    render();
+  } catch (err) {
+    if (ticket === loadTicket) say(err.message, true);
+  }
 }
 
 function render() {
@@ -66,11 +78,10 @@ function render() {
 
 function row(r) {
   const done = Boolean(r.done_at);
-  const canEdit = state.role === 'coordinator';
   const body = [
     h('span', { className: 'time' }, r.start_time ? fmtTime(r.start_time) : t('anyTime')),
     h('strong', { className: 'activity' }, r.activity),
-    h('span', { className: 'loc' }, r.location),
+    h('span', { className: 'loc' }, r.building),
     h('span', { className: 'notes' }, r.notes)
   ];
   return h('li', { className: done ? 'req done' : 'req' },
@@ -78,17 +89,18 @@ function row(r) {
       ? h('input', { type: 'checkbox', checked: done, 'aria-label': `${t('markDone')}: ${r.activity}`,
                      onchange: e => setDone(r.id, e.target) })
       : done && h('span', { className: 'badge' }, t('done')),
-    canEdit
+    state.role === 'coordinator'
       ? h('button', { type: 'button', className: 'body', onclick: () => edit(r) }, body)
       : h('div', { className: 'body' }, body));
 }
 
 async function setDone(id, box) {
   box.disabled = true;
-  const { error } = await sb.rpc('set_done', { p_id: id, p_done: box.checked });
-  if (error) {
+  try {
+    await api(`requests/${id}/done`, { method: 'POST', body: { done: box.checked } });
+  } catch (err) {
     box.checked = !box.checked;
-    say(errorMessage(error), true);
+    oops(err);
   }
   box.disabled = false;
   load();
@@ -97,6 +109,8 @@ async function setDone(id, box) {
 /* ------------------------------------------------------------------ */
 /* Coordinator entry form                                              */
 /* ------------------------------------------------------------------ */
+
+field('building').append(...BUILDINGS.map(b => h('option', { value: b }, b)));
 
 function setDate(key) {
   field('day').value = key;
@@ -118,8 +132,8 @@ function edit(r) {
   state.editing = r.id;
   field('activity').value = r.activity;
   setDate(r.day);
-  field('start_time').value = r.start_time?.slice(0, 5) ?? '';
-  field('location').value = r.location;
+  field('start_time').value = r.start_time ?? '';
+  field('building').value = r.building;     // blank if the building was since removed from the list
   field('notes').value = r.notes;
   form.classList.add('editing');
   $('#save').dataset.i18n = 'saveChanges';
@@ -129,39 +143,32 @@ function edit(r) {
   field('activity').focus();
 }
 
-async function loadSuggestions() {
-  const { data } = await sb.from('requests').select('activity, location')
-    .order('created_at', { ascending: false }).limit(300);
-  if (!data) return;
-  const fill = (id, values) => $(id).replaceChildren(...uniqueRecent(values).map(value => h('option', { value })));
-  fill('#activities', data.map(r => r.activity));
-  fill('#locations', data.map(r => r.location));
-}
-
 form.addEventListener('submit', async e => {
   e.preventDefault();
   const rec = {
     activity: field('activity').value.trim(),
     day: field('day').value,
     start_time: field('start_time').value || null,
-    location: field('location').value.trim(),
+    building: field('building').value,
     notes: field('notes').value.trim()
   };
   if (!rec.activity) return field('activity').focus();
 
   $('#save').disabled = true;
-  const { error } = state.editing
-    ? await sb.from('requests').update(rec).eq('id', state.editing)
-    : await sb.from('requests').insert(rec);
-  $('#save').disabled = false;
-  if (error) return say(errorMessage(error), true);   // form keeps what was typed
-
+  try {
+    await (state.editing
+      ? api(`requests/${state.editing}`, { method: 'PUT', body: rec })
+      : api('requests', { method: 'POST', body: rec }));
+  } catch (err) {
+    return oops(err);                       // the form keeps what was typed
+  } finally {
+    $('#save').disabled = false;
+  }
   say(t('saved'));
   const { from, to } = range(state.view, state.anchor);
   if (rec.day < from || rec.day > to) state.anchor = rec.day;   // show where it landed
   resetForm();
   field('activity').focus();
-  loadSuggestions();
   load();
 });
 
@@ -171,40 +178,36 @@ field('day').addEventListener('change', () => setDate(field('day').value));
 $('#cancel-edit').addEventListener('click', resetForm);
 $('#delete').addEventListener('click', async () => {
   if (!state.editing || !confirm(t('confirmDelete'))) return;
-  const { error } = await sb.from('requests').delete().eq('id', state.editing);
-  if (error) return say(errorMessage(error), true);
+  try {
+    await api(`requests/${state.editing}`, { method: 'DELETE' });
+  } catch (err) {
+    return oops(err);
+  }
   say(t('deleted'));
   resetForm();
   load();
 });
 
 /* ------------------------------------------------------------------ */
-/* Sign-in                                                             */
+/* Sign-in: one password per role                                      */
 /* ------------------------------------------------------------------ */
 
 async function refreshRole() {
-  let session = null;
-  try {
-    ({ data: { session } } = await withTimeout(sb.auth.getSession()));
-  } catch (err) {
-    say(errorMessage(err), true);
-  }
   state.role = null;
-  if (session) {
-    const { data, error } = await sb.from('staff').select('role').eq('user_id', session.user.id).maybeSingle();
-    if (error) say(errorMessage(error), true);
-    else if (!data) say(t('err.noRole'), true);
-    state.role = data?.role ?? null;
+  if (getKey()) {
+    try {
+      state.role = (await api('me')).role;
+    } catch (err) {
+      say(err.message, true);
+      if (err.status === 401) setKey(null);   // keep the key on network errors, retry next time
+    }
   }
   $('#who').dataset.i18n = state.role ? `role.${state.role}` : '';
   $('#who').textContent = state.role ? t(`role.${state.role}`) : '';
-  $('#signin-open').hidden = Boolean(session);
-  $('#signout').hidden = !session;
+  $('#signin-open').hidden = Boolean(state.role);
+  $('#signout').hidden = !state.role;
   form.hidden = state.role !== 'coordinator';
-  if (state.role === 'coordinator') {
-    resetForm();
-    loadSuggestions();
-  }
+  if (state.role === 'coordinator' && !state.editing) resetForm();
   render();
 }
 
@@ -213,18 +216,22 @@ $('#signin-open').addEventListener('click', () => dialog.showModal());
 $('#signin-cancel').addEventListener('click', () => dialog.close());
 $('#signin-form').addEventListener('submit', async e => {
   e.preventDefault();
-  const f = e.target.elements;
-  const { error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.password.value });
-  if (error) return say(errorMessage(error), true);
+  const key = e.target.elements.password.value;
+  try {
+    await api('me', { key });
+  } catch (err) {
+    return say(err.message, true);
+  }
+  setKey(key);
   e.target.reset();
   dialog.close();
   say('');
   await refreshRole();
   if (state.role === 'coordinator') field('activity').focus();
 });
-$('#signout').addEventListener('click', async () => {
-  await sb.auth.signOut();
-  await refreshRole();
+$('#signout').addEventListener('click', () => {
+  setKey(null);
+  refreshRole();
 });
 
 /* ------------------------------------------------------------------ */
@@ -253,18 +260,12 @@ function resume() {
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') resume(); });
 addEventListener('online', resume);
+// shortcut: polls every 30 s instead of live push; fine for one office, revisit if it feels slow.
+setInterval(() => { if (document.visibilityState === 'visible') load(); }, REFRESH_MS);
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
 
 apply();
 render();
-if (!configured) {
-  say(t('notConfigured'), true);
-  $('#signin-open').hidden = true;
-} else {
-  sb.channel('requests')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, () => load())
-    .subscribe();
-  load();
-  refreshRole();
-}
+load();
+refreshRole();
