@@ -98,3 +98,8 @@ dialog label span { display: block; font-weight: 700; margin-block-end: 4px; }
 @media (max-width: 420px) {
   #entry { grid-template-columns: 1fr; }
 }
+/* Phones: Day/Week on its own row, date navigation under it. */
+@media (max-width: 600px) {
+  .toggle { flex-basis: 100%; }
+  .toggle button { flex: 1; }
+}

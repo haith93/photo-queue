@@ -1,7 +1,7 @@
 /* Offline shell, trimmed from where_is_haitham. Bump VERSION on each deploy
    that changes the SHELL list. /api is never cached: a queue that silently
    shows stale tasks is worse than one that says it is offline. */
-const VERSION = 'pq-v2';
+const VERSION = 'pq-v3';
 const SHELL = [
   './', './index.html', './manifest.json', './css/app.css',
   './js/app.js', './js/api.js', './js/buildings.js', './js/i18n.js', './js/queue.js',

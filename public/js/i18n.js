@@ -16,6 +16,8 @@ export const STRINGS = {
   'f.date':         ['Date', 'التاريخ'],
   'f.time':         ['Time', 'الوقت'],
   'f.building':     ['Building', 'المبنى'],
+  'other':          ['Other (type the place)', 'أخرى (اكتب المكان)'],
+  'f.place':        ['Place', 'المكان'],
   'choose':         ['Choose…', 'اختر…'],
   'f.notes':        ['Notes', 'ملاحظات'],
   'today':          ['Today', 'اليوم'],

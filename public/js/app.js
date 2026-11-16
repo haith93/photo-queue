@@ -110,7 +110,22 @@ async function setDone(id, box) {
 /* Coordinator entry form                                              */
 /* ------------------------------------------------------------------ */
 
-field('building').append(...BUILDINGS.map(b => h('option', { value: b }, b)));
+const OTHER = '__other';
+field('building').append(...BUILDINGS.map(b => h('option', { value: b }, b)),
+  h('option', { value: OTHER, 'data-i18n': 'other' }, t('other')));
+
+function setBuilding(name) {
+  const listed = !name || BUILDINGS.includes(name);
+  field('building').value = listed ? name : OTHER;
+  field('place').value = listed ? '' : name;
+  showPlace();
+}
+function showPlace() {
+  const other = field('building').value === OTHER;
+  $('#place-box').hidden = !other;
+  field('place').required = other;
+}
+field('building').addEventListener('change', () => { showPlace(); if (!$('#place-box').hidden) field('place').focus(); });
 
 function setDate(key) {
   field('day').value = key;
@@ -122,6 +137,7 @@ function resetForm() {
   form.reset();
   state.editing = null;
   setDate(state.today);
+  showPlace();
   form.classList.remove('editing');
   $('#save').dataset.i18n = 'add';
   $('#delete').hidden = $('#cancel-edit').hidden = true;
@@ -133,7 +149,7 @@ function edit(r) {
   field('activity').value = r.activity;
   setDate(r.day);
   field('start_time').value = r.start_time ?? '';
-  field('building').value = r.building;     // blank if the building was since removed from the list
+  setBuilding(r.building);                  // unlisted names show under "Other"
   field('notes').value = r.notes;
   form.classList.add('editing');
   $('#save').dataset.i18n = 'saveChanges';
@@ -149,7 +165,7 @@ form.addEventListener('submit', async e => {
     activity: field('activity').value.trim(),
     day: field('day').value,
     start_time: field('start_time').value || null,
-    building: field('building').value,
+    building: field('building').value === OTHER ? field('place').value.trim() : field('building').value,
     notes: field('notes').value.trim()
   };
   if (!rec.activity) return field('activity').focus();

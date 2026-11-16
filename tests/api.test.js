@@ -103,7 +103,8 @@ describe('input checks', () => {
     assert.equal(validate({ ...sample, day: '2026-02-30' })[0], 'day');
     assert.equal(validate({ ...sample, day: '16/11/2026' })[0], 'day');
     assert.equal(validate({ ...sample, start_time: '25:00' })[0], 'start_time');
-    assert.equal(validate({ ...sample, building: 'Somewhere else' })[0], 'building');
+    assert.equal(validate({ ...sample, building: ' ' })[0], 'building');
+    assert.equal(validate({ ...sample, building: 'Somewhere else' })[0], null);   // typed via "Other"
     assert.equal(validate({ ...sample, notes: 'x'.repeat(2001) })[0], 'notes');
     assert.equal(validate(null)[0], 'activity');
   });

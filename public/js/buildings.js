@@ -1,5 +1,6 @@
 // The building dropdown. Edit this list, commit and push: the site redeploys
-// by itself. The server also checks against it, so it is the single source.
+// by itself.
+// "Other" in the form lets the coordinator type any place not listed here.
 // Renaming a building is fine; old requests keep the old name until edited.
 export const BUILDINGS = [
   "Kawthar Restaurant - مطعم الكوثر",
@@ -9,4 +10,5 @@ export const BUILDINGS = [
   "ADIS - أديس",
   "KG section - مبنى الروضات",
   "Headquarters - الادارات",
+  "Imam Hussein (pbuh) Hall - قاعة الامام الحسين (ع)",
 ];
